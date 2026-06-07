@@ -1,0 +1,30 @@
+-- CreateTable
+CREATE TABLE `Jubilado` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `cedula` VARCHAR(191) NOT NULL,
+    `nombres` VARCHAR(191) NOT NULL,
+    `apellidos` VARCHAR(191) NOT NULL,
+    `sexo` VARCHAR(191) NOT NULL,
+    `fechaNacimiento` VARCHAR(191) NOT NULL,
+    `email` VARCHAR(191) NULL,
+    `telefonoCelular` VARCHAR(191) NULL,
+    `telefonoResidencial` VARCHAR(191) NULL,
+    `direccion` TEXT NULL,
+    `pais` VARCHAR(191) NOT NULL DEFAULT 'Venezuela',
+    `estado` VARCHAR(191) NULL,
+    `municipio` VARCHAR(191) NULL,
+    `parroquia` VARCHAR(191) NULL,
+    `tipoPersonal` VARCHAR(191) NOT NULL,
+    `fechaIngreso` VARCHAR(191) NULL,
+    `fechaJubilacion` VARCHAR(191) NULL,
+    `tiempoServicio` INTEGER NULL,
+    `dependencia` TEXT NULL,
+    `statusLaboral` VARCHAR(191) NOT NULL,
+    `censoCompletado` BOOLEAN NOT NULL DEFAULT false,
+    `fechaCenso` DATETIME(3) NULL,
+    `creadoEn` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `actualizadoEn` DATETIME(3) NOT NULL,
+
+    UNIQUE INDEX `Jubilado_cedula_key`(`cedula`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

@@ -1,0 +1,37 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model Jubilado {
+  id                  Int       @id @default(autoincrement())
+  cedula              String    @unique
+  nombres             String
+  apellidos           String
+  sexo                String
+  fechaNacimiento     String    // Almacenado como texto "DD-MM-YYYY" (desde el Excel)
+  email               String?
+  telefonoCelular     String?
+  telefonoResidencial String?
+  direccion           String?   @db.Text
+  pais                String    @default("Venezuela")
+  estado              String?
+  municipio           String?
+  parroquia           String?
+  tipoPersonal        String    // ADMINISTRATIVO, DOCENTE, OBRERO
+  fechaIngreso        String?
+  fechaJubilacion     String?
+  tiempoServicio      Int?      // Años de servicio calculados o ajustados
+  dependencia         String?   @db.Text // Ubicación física/adm de donde se jubiló
+  statusLaboral       String    // JUBILADO, INCAPACITADO, ACTIVO, SOBREVIVIENTE
+  censoCompletado     Boolean   @default(false)
+  fechaCenso          DateTime?
+  creadoEn            DateTime  @default(now())
+  actualizadoEn       DateTime  @updatedAt
+}

@@ -24,3 +24,37 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+@media print {
+  body {
+    background: white !important;
+    color: #1e293b !important; /* slate-800 */
+    font-family: Arial, sans-serif;
+  }
+  
+  /* Ocultar todo menos el área del recibo durante la impresión */
+  body * {
+    visibility: hidden;
+  }
+  
+  #receipt-print-area, #receipt-print-area * {
+    visibility: visible;
+  }
+  
+  #receipt-print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  
+  .print\:hidden {
+    display: none !important;
+    visibility: hidden !important;
+  }
+}
+
