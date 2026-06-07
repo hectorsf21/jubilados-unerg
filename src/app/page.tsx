@@ -2,7 +2,15 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { FaIdCard, FaCalendarAlt, FaSpinner, FaUserCheck, FaExclamationCircle } from "react-icons/fa";
+import {
+  FaIdCard,
+  FaCalendarAlt,
+  FaSpinner,
+  FaUserCheck,
+  FaExclamationCircle,
+  FaUniversity,
+  FaShieldAlt,
+} from "react-icons/fa";
 
 export default function Home() {
   const router = useRouter();
@@ -17,20 +25,25 @@ export default function Home() {
     setLoading(true);
 
     if (!cedula.trim() || !fechaNacimiento.trim()) {
-      setError("Por favor, ingrese todos los campos requeridos.");
+      setError("Por favor, ingrese su cédula y seleccione su fecha de nacimiento.");
       setLoading(false);
       return;
+    }
+
+    // El input type="date" devuelve YYYY-MM-DD, lo convertimos a DD-MM-YYYY para la API
+    let fechaParaEnviar = fechaNacimiento;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(fechaNacimiento)) {
+      const [year, month, day] = fechaNacimiento.split("-");
+      fechaParaEnviar = `${day}-${month}-${year}`;
     }
 
     try {
       const response = await fetch("/api/verificar", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           cedula: cedula.trim(),
-          fechaNacimiento: fechaNacimiento.trim(),
+          fechaNacimiento: fechaParaEnviar,
         }),
       });
 
@@ -40,10 +53,16 @@ export default function Home() {
         throw new Error(data.error || "Error al verificar los datos.");
       }
 
-      if (data.success && data.data) {
-        // Guardar datos en sessionStorage para el siguiente paso
-        sessionStorage.setItem("unerg-jubilado-data", JSON.stringify(data.data));
-        router.push("/formulario");
+      if (data.success) {
+        if (data.isAdmin) {
+          // El administrador va al portal de administración
+          sessionStorage.setItem("unerg-admin-auth", "true");
+          router.push("/admin");
+        } else if (data.data) {
+          // El jubilado va al formulario de censo
+          sessionStorage.setItem("unerg-jubilado-data", JSON.stringify(data.data));
+          router.push("/formulario");
+        }
       } else {
         throw new Error("Respuesta inválida del servidor.");
       }
@@ -57,15 +76,15 @@ export default function Home() {
 
   return (
     <div className="relative min-h-screen flex flex-col items-center justify-center bg-slate-900 overflow-hidden font-sans">
-      {/* Elementos Decorativos de Fondo (Efecto Gradiente) */}
-      <div className="absolute top-[-20%] left-[-20%] w-[60%] h-[60%] rounded-full bg-blue-600/20 blur-[120px] pointer-events-none"></div>
-      <div className="absolute bottom-[-20%] right-[-20%] w-[60%] h-[60%] rounded-full bg-amber-500/10 blur-[120px] pointer-events-none"></div>
+      {/* Fondo decorativo */}
+      <div className="absolute top-[-20%] left-[-20%] w-[60%] h-[60%] rounded-full bg-blue-600/20 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-20%] right-[-20%] w-[60%] h-[60%] rounded-full bg-amber-500/10 blur-[120px] pointer-events-none" />
 
-      <div className="w-full max-w-md p-6 z-10">
-        {/* Encabezado/Logo de la Universidad */}
+      <div className="w-full max-w-md px-4 z-10">
+        {/* Logo y nombre de la universidad */}
         <div className="flex flex-col items-center mb-8 text-center">
           <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-blue-700 to-amber-500 flex items-center justify-center shadow-xl shadow-blue-500/20 mb-4 ring-4 ring-slate-800/80">
-            <span className="text-white text-3xl font-extrabold tracking-wider">U</span>
+            <FaUniversity className="text-white text-3xl" />
           </div>
           <h1 className="text-white text-2xl font-bold tracking-tight">
             Censo de Jubilados
@@ -73,80 +92,86 @@ export default function Home() {
           <p className="text-slate-400 text-xs mt-1 uppercase tracking-widest font-semibold">
             UNERG
           </p>
-          <p className="text-slate-500 text-xs mt-2 max-w-xs leading-relaxed">
+          <p className="text-slate-500 text-[11px] mt-2 max-w-xs leading-relaxed">
             Universidad Nacional Experimental de los Llanos Centrales Rómulo Gallegos
           </p>
         </div>
 
-        {/* Tarjeta de Verificación */}
-        <div className="bg-slate-950/40 backdrop-blur-xl border border-slate-800/80 rounded-2xl p-8 shadow-2xl">
-          <h2 className="text-white text-lg font-semibold mb-6 flex items-center gap-2">
-            <FaUserCheck className="text-blue-500" /> Verificar Identidad
+        {/* Tarjeta de acceso */}
+        <div className="bg-slate-950/50 backdrop-blur-xl border border-slate-800/80 rounded-2xl p-8 shadow-2xl">
+          <h2 className="text-white text-lg font-semibold mb-2 flex items-center gap-2">
+            <FaUserCheck className="text-blue-500" /> Ingresar al Sistema
           </h2>
+          <p className="text-slate-400 text-xs mb-6 leading-relaxed">
+            Para actualizar sus datos, por favor ingrese su número de cédula y seleccione su fecha de nacimiento haciendo clic en el calendario.
+          </p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Input Cédula */}
+            {/* Campo Cédula */}
             <div>
-              <label htmlFor="cedula" className="block text-slate-300 text-xs font-medium uppercase tracking-wider mb-2">
-                Cédula de Identidad
+              <label htmlFor="cedula" className="block text-slate-300 text-xs font-semibold uppercase tracking-wider mb-2">
+                Número de Cédula
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
-                  <FaIdCard className="text-sm" />
+                  <FaIdCard />
                 </div>
                 <input
                   type="text"
                   id="cedula"
-                  placeholder="Ej. 12345678"
+                  inputMode="numeric"
+                  placeholder="Ej: 12345678"
                   value={cedula}
                   onChange={(e) => setCedula(e.target.value.replace(/\D/g, ""))}
-                  className="w-full pl-10 pr-4 py-3 bg-slate-900/60 border border-slate-800 rounded-xl text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  className="w-full pl-10 pr-4 py-3.5 bg-slate-900/70 border border-slate-700 rounded-xl text-white placeholder-slate-500 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   disabled={loading}
                 />
               </div>
             </div>
 
-            {/* Input Fecha Nacimiento */}
+            {/* Campo Fecha de Nacimiento (selector de calendario) */}
             <div>
-              <label htmlFor="fechaNacimiento" className="block text-slate-300 text-xs font-medium uppercase tracking-wider mb-2">
+              <label htmlFor="fechaNacimiento" className="block text-slate-300 text-xs font-semibold uppercase tracking-wider mb-2">
                 Fecha de Nacimiento
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
-                  <FaCalendarAlt className="text-sm" />
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500 z-10">
+                  <FaCalendarAlt />
                 </div>
                 <input
-                  type="text"
+                  type="date"
                   id="fechaNacimiento"
-                  placeholder="DD-MM-YYYY (Ej. 15-08-1950)"
                   value={fechaNacimiento}
                   onChange={(e) => setFechaNacimiento(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-slate-900/60 border border-slate-800 rounded-xl text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  max={new Date().toISOString().split("T")[0]}
+                  min="1920-01-01"
+                  className="w-full pl-10 pr-4 py-3.5 bg-slate-900/70 border border-slate-700 rounded-xl text-white text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all [color-scheme:dark] cursor-pointer"
                   disabled={loading}
                 />
               </div>
-              <p className="text-[10px] text-slate-500 mt-1.5">
-                Utilice el formato de guiones (Ej: 03-01-1933) o barras (Ej: 03/01/1933).
+              <p className="text-[11px] text-slate-500 mt-1.5 flex items-center gap-1">
+                <FaCalendarAlt className="text-[9px]" />
+                Haga clic en el campo para seleccionar su fecha en el calendario.
               </p>
             </div>
 
-            {/* Mensaje de Error */}
+            {/* Error */}
             {error && (
               <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3.5 flex items-start gap-2.5">
                 <FaExclamationCircle className="text-red-500 text-base mt-0.5 shrink-0" />
-                <p className="text-red-400 text-xs leading-relaxed">{error}</p>
+                <p className="text-red-400 text-sm leading-relaxed">{error}</p>
               </div>
             )}
 
-            {/* Botón de Envío */}
+            {/* Botón */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 px-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-medium rounded-xl text-sm shadow-lg shadow-blue-500/10 hover:shadow-blue-500/20 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
+              className="w-full py-4 px-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-semibold rounded-xl text-base shadow-lg shadow-blue-500/10 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <>
-                  <FaSpinner className="animate-spin text-sm" />
+                  <FaSpinner className="animate-spin" />
                   Verificando...
                 </>
               ) : (
@@ -156,10 +181,16 @@ export default function Home() {
           </form>
         </div>
 
-        {/* Nota Legal/Instrucciones de pie de página */}
-        <p className="text-slate-600 text-[10px] text-center mt-8 leading-relaxed max-w-sm mx-auto">
-          Este sistema es de uso exclusivo para el personal jubilado de la UNERG. Sus datos están protegidos bajo políticas de confidencialidad institucional.
-        </p>
+        {/* Footer */}
+        <div className="mt-6 flex flex-col items-center gap-2">
+          <p className="text-slate-600 text-[10px] text-center leading-relaxed max-w-sm">
+            Sistema de uso exclusivo para el personal jubilado de la UNERG. Sus datos están protegidos bajo políticas de confidencialidad institucional.
+          </p>
+          <div className="flex items-center gap-1 text-slate-700 text-[10px]">
+            <FaShieldAlt className="text-[9px]" />
+            <span>Acceso Seguro</span>
+          </div>
+        </div>
       </div>
     </div>
   );

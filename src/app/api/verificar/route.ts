@@ -1,21 +1,17 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
-// Función para normalizar fechas y permitir comparaciones flexibles
+// Normaliza fechas para poder comparar distintos formatos
 function normalizeDate(dateStr: string): string {
   let cleaned = dateStr.trim().replace(/\//g, "-");
-  
   const parts = cleaned.split("-");
   if (parts.length === 3) {
-    const day = parts[0].padStart(2, "0");
-    const month = parts[1].padStart(2, "0");
-    let year = parts[2];
-    if (year.length === 2) {
-      const currentYearShort = new Date().getFullYear() % 100;
-      const yr = parseInt(year, 10);
-      year = yr > currentYearShort ? `19${year}` : `20${year}`;
+    // Si viene en formato YYYY-MM-DD (desde el input date), convertir a DD-MM-YYYY
+    if (parts[0].length === 4) {
+      return `${parts[2].padStart(2, "0")}-${parts[1].padStart(2, "0")}-${parts[0]}`;
     }
-    return `${day}-${month}-${year}`;
+    // Si viene en formato DD-MM-YYYY, normalizar padding
+    return `${parts[0].padStart(2, "0")}-${parts[1].padStart(2, "0")}-${parts[2]}`;
   }
   return cleaned;
 }
@@ -32,49 +28,65 @@ export async function POST(request: Request) {
       );
     }
 
-    // Limpiar cédula ingresada (eliminar puntos, espacios, etc.)
     const cleanCedula = String(cedula).replace(/\D/g, "").trim();
 
     if (!cleanCedula) {
-      return NextResponse.json(
-        { error: "Cédula inválida." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Cédula inválida." }, { status: 400 });
     }
 
-    // Buscar el jubilado en la base de datos
+    // --- Verificar si es Administrador ---
+    const adminCedula = process.env.ADMIN_CEDULA || "";
+    const adminFecha = process.env.ADMIN_FECHA_NACIMIENTO || "";
+
+    if (cleanCedula === adminCedula.replace(/\D/g, "")) {
+      // Normalizar la fecha ingresada y la del admin para comparar
+      const enteredNorm = normalizeDate(fechaNacimiento);
+      const adminNorm = normalizeDate(adminFecha);
+
+      if (enteredNorm === adminNorm) {
+        return NextResponse.json({ success: true, isAdmin: true });
+      } else {
+        return NextResponse.json(
+          { error: "La fecha de nacimiento no coincide." },
+          { status: 401 }
+        );
+      }
+    }
+
+    // --- Verificar si es Jubilado ---
     const jubilado = await prisma.jubilado.findUnique({
       where: { cedula: cleanCedula },
     });
 
     if (!jubilado) {
       return NextResponse.json(
-        { error: "No se encontró ningún jubilado con esta cédula en nuestros registros." },
+        {
+          error:
+            "No se encontró ningún jubilado con esta cédula en nuestros registros. Por favor, verifique el número ingresado.",
+        },
         { status: 404 }
       );
     }
 
     // Comparar fecha de nacimiento normalizada
-    const enteredDateNormalized = normalizeDate(fechaNacimiento);
-    const dbDateNormalized = normalizeDate(jubilado.fechaNacimiento);
+    const enteredDateNorm = normalizeDate(fechaNacimiento);
+    const dbDateNorm = normalizeDate(jubilado.fechaNacimiento);
 
-    if (enteredDateNormalized !== dbDateNormalized) {
+    if (enteredDateNorm !== dbDateNorm) {
       return NextResponse.json(
-        { error: "La fecha de nacimiento no coincide con la registrada para esta cédula." },
+        {
+          error:
+            "La fecha de nacimiento no coincide con la registrada para esta cédula. Verifique el día, mes y año.",
+        },
         { status: 401 }
       );
     }
 
-    // Retornar los datos del jubilado
-    return NextResponse.json({
-      success: true,
-      data: jubilado,
-    });
-
+    return NextResponse.json({ success: true, isAdmin: false, data: jubilado });
   } catch (error: any) {
     console.error("Error en API verificar:", error);
     return NextResponse.json(
-      { error: "Ocurrió un error al verificar los datos." },
+      { error: "Ocurrió un error interno. Intente de nuevo." },
       { status: 500 }
     );
   }
