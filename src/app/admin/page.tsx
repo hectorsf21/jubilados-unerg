@@ -160,8 +160,8 @@ export default function AdminPage() {
       {/* Header de Administración */}
       <header className="sticky top-0 z-50 bg-slate-950/80 backdrop-blur-xl border-b border-slate-800 px-6 py-4 flex items-center justify-between shadow-lg">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-700 to-amber-500 flex items-center justify-center shadow ring-2 ring-slate-800">
-            <FaUniversity className="text-white text-sm" />
+          <div className="w-12 h-auto flex items-center justify-center">
+            <img src="/logo.png" alt="Logo" className="w-full h-auto drop-shadow-md" />
           </div>
           <div>
             <h1 className="text-white text-sm font-bold leading-none">Portal Administrativo</h1>

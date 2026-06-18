@@ -83,8 +83,12 @@ export default function Home() {
       <div className="w-full max-w-md px-4 z-10">
         {/* Logo y nombre de la universidad */}
         <div className="flex flex-col items-center mb-8 text-center">
-          <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-blue-700 to-amber-500 flex items-center justify-center shadow-xl shadow-blue-500/20 mb-4 ring-4 ring-slate-800/80">
-            <FaUniversity className="text-white text-3xl" />
+          <div className="w-48 h-auto flex items-center justify-center mb-4">
+            <img 
+              src="/logo.png" 
+              alt="Logo Caminos y Horizontes" 
+              className="w-full h-auto object-contain drop-shadow-xl"
+            />
           </div>
           <h1 className="text-white text-2xl font-bold tracking-tight">
             Censo de Jubilados
