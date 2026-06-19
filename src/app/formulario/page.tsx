@@ -565,16 +565,16 @@ export default function FormularioCenso() {
                   <FaBriefcase className="text-sm" /> Información Laboral en la UNERG
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* Tipo de Personal */}
+                  {/* Tipo de Personal (Bloqueado) */}
                   <div>
-                    <label htmlFor="tipoPersonal" className="block text-slate-300 text-xs font-medium uppercase tracking-wider mb-2">
-                      Tipo de Personal <span className="text-red-500">*</span>
+                    <label htmlFor="tipoPersonal" className="block text-slate-300 text-xs font-medium uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                      Tipo de Personal <FaLock className="text-slate-500 text-[10px]" />
                     </label>
                     <select
                       id="tipoPersonal"
                       value={tipoPersonal}
-                      onChange={(e) => setTipoPersonal(e.target.value)}
-                      className="w-full px-4 py-2.5 bg-slate-900/60 border border-slate-800 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                      disabled
+                      className="w-full px-4 py-2.5 bg-slate-900/40 border border-slate-800 rounded-xl text-slate-400 text-sm focus:outline-none cursor-not-allowed transition-all duration-200"
                     >
                       <option className="bg-slate-950" value="ADMINISTRATIVO">Administrativo</option>
                       <option className="bg-slate-950" value="DOCENTE">Docente</option>
