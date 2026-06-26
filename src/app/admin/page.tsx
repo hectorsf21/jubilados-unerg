@@ -91,6 +91,7 @@ export default function AdminPage() {
   const [recientes, setRecientes] = useState<Reciente[]>([]);
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
+  const [downloadingCompletados, setDownloadingCompletados] = useState(false);
   const [busqueda, setBusqueda] = useState("");
   const [error, setError] = useState<string | null>(null);
 
@@ -142,6 +143,28 @@ export default function AdminPage() {
     }
   };
 
+  const handleDescargarCompletados = async () => {
+    setDownloadingCompletados(true);
+    try {
+      const res = await fetch("/api/admin/descargar-completados");
+      if (!res.ok) throw new Error("No hay registros completados o hubo un error.");
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const ts = new Date().toISOString().slice(0, 10);
+      a.download = `censo-unerg-actualizados-${ts}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (e: any) {
+      alert("Error al descargar: " + (e.message || "Intente de nuevo."));
+    } finally {
+      setDownloadingCompletados(false);
+    }
+  };
+
   const handleLogout = () => {
     sessionStorage.removeItem("unerg-admin-auth");
     router.push("/");
@@ -178,16 +201,30 @@ export default function AdminPage() {
             <FaSync className={loading ? "animate-spin text-xs" : "text-xs"} />
           </button>
           <button
+            onClick={handleDescargarCompletados}
+            disabled={downloadingCompletados}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl shadow transition-all cursor-pointer disabled:opacity-50 active:scale-95"
+            title="Descargar solo los que ya completaron el censo"
+          >
+            {downloadingCompletados ? (
+              <FaSpinner className="animate-spin" />
+            ) : (
+              <FaDownload />
+            )}
+            {downloadingCompletados ? "Generando..." : "Descargar Actualizados"}
+          </button>
+          <button
             onClick={handleDescargar}
             disabled={downloading}
             className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-xl shadow transition-all cursor-pointer disabled:opacity-50 active:scale-95"
+            title="Descargar absolutamente todos (Completados y Pendientes)"
           >
             {downloading ? (
               <FaSpinner className="animate-spin" />
             ) : (
               <FaDownload />
             )}
-            {downloading ? "Generando..." : "Descargar Excel"}
+            {downloading ? "Generando..." : "Descargar Todos"}
           </button>
           <button
             onClick={handleLogout}
